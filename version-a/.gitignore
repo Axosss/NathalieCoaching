@@ -1,0 +1,6 @@
+.DS_Store
+dist/
+images/nouvelles/
+
+# Local Netlify folder
+.netlify

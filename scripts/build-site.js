@@ -4,8 +4,8 @@ const { join } = require("path");
 const PROJECT_ID = "pyvdxbda";
 const DATASET = "production";
 const API_VERSION = "2024-01-01";
-const SRC = join(__dirname, "..");
-const DIST = join(__dirname, "..", "dist");
+const SRC = join(__dirname, "..", "version-a");
+const DIST = join(__dirname, "..", "version-a", "dist");
 
 async function query(groq) {
   const url = `https://${PROJECT_ID}.api.sanity.io/v${API_VERSION}/data/query/${DATASET}?query=${encodeURIComponent(groq)}`;
