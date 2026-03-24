@@ -27,6 +27,23 @@ if (hamburger && navLinks) {
   });
 }
 
+// Scroll animations (process steps — progressive fill)
+(function () {
+  var container = document.querySelector(".process-steps");
+  if (!container) return;
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        container.classList.add("animated");
+        observer.unobserve(container);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(container);
+})();
+
 // Cookie banner
 (function () {
   var banner = document.getElementById("cookieBanner");

@@ -4,8 +4,8 @@ const { join } = require("path");
 const PROJECT_ID = "pyvdxbda";
 const DATASET = "production";
 const API_VERSION = "2024-01-01";
-const SRC = join(__dirname, "..", "version-a");
-const DIST = join(__dirname, "..", "version-a", "dist");
+const SRC = join(__dirname, "..");
+const DIST = join(__dirname, "..", "dist");
 
 async function query(groq) {
   const url = `https://${PROJECT_ID}.api.sanity.io/v${API_VERSION}/data/query/${DATASET}?query=${encodeURIComponent(groq)}`;
@@ -20,6 +20,7 @@ async function fetchAll() {
     settings,
     hero,
     mirror,
+    processSection,
     coachingsSection,
     coachings,
     whois,
@@ -37,11 +38,13 @@ async function fetchAll() {
     mentions,
     partnerLogos,
     galleryPhotos,
+    blogArticles,
   ] = await Promise.all([
-    query('*[_type=="siteSettings"][0]'),
-    query('*[_type=="homeHero"][0]'),
-    query('*[_type=="mirrorSection"][0]'),
-    query('*[_type=="coachingsSection"][0]'),
+    query('*[_type=="siteSettings"][0]'),       // settings
+    query('*[_type=="homeHero"][0]'),            // hero
+    query('*[_type=="mirrorSection"][0]'),       // mirror
+    query('*[_type=="processSection"][0]'),      // processSection
+    query('*[_type=="coachingsSection"][0]'),    // coachingsSection
     query('*[_type=="coaching"] | order(order asc)'),
     query('*[_type=="whois"][0]'),
     query('*[_type=="testimonialsSection"][0]'),
@@ -58,12 +61,14 @@ async function fetchAll() {
     query('*[_type=="mentionsLegales"][0]'),
     query('*[_type=="partnerLogo"] | order(order asc)'),
     query('*[_type=="galleryPhoto"] | order(order asc)'),
+    query('*[_type=="blogArticle"] | order(order asc)'),
   ]);
 
   return {
     settings,
     hero,
     mirror,
+    processSection,
     coachingsSection,
     coachings,
     whois,
@@ -81,12 +86,13 @@ async function fetchAll() {
     mentions,
     partnerLogos,
     galleryPhotos,
+    blogArticles,
   };
 }
 
 // ── Helpers ──
 const esc = (s) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const nl2br = (s) => (s || "").split("\n").join("<br>");
+const nl2br = (s) => esc(s).split("\n").join("<br>");
 
 // Convert Sanity image ref to CDN URL
 function sanityImg(imageField, fallback = "") {
@@ -101,22 +107,22 @@ function sanityImg(imageField, fallback = "") {
 function nav(settings, activePage = "") {
   return `<nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo">${esc(settings?.siteName || "Nathalie Debeir")}</a>
+      <a href="index.html" class="nav-logo"><img src="images/logo-nav.png" alt="${esc(settings?.siteName || "Nathalie Debeir")}" class="nav-logo-img"></a>
       <button class="nav-hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links">
         <li><a href="prestations.html">${esc(settings?.navPrestations || "Prestations")}</a></li>
         <li><a href="about.html">${esc(settings?.navAbout || "À propos")}</a></li>
-        <li><a href="${activePage === "index" ? "#calendly" : "index.html#calendly"}">${esc(settings?.navCta || "Prendre rendez-vous")}</a></li>
-      </ul>
+        <li><a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer">${esc(settings?.navCta || "Prendre rendez-vous")}</a></li>
+        ${settings?.linkedin ? `<li><a href="${esc(settings.linkedin)}" target="_blank" rel="noopener noreferrer" class="nav-linkedin" aria-label="LinkedIn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a></li>` : ''}
     </div>
   </nav>`;
 }
 
 function footerFull(settings, footer) {
   const lines = (footer?.phrase || "").split("\n");
-  return `<footer class="footer" id="calendly">
+  return `<footer class="footer">
     <div class="footer-inner">
       <p class="footer-phrase">${lines.map(esc).join("<br>")}</p>
       <div class="footer-signature">
@@ -125,10 +131,10 @@ function footerFull(settings, footer) {
         </svg>
       </div>
       <div class="footer-cta">
-        <a href="#calendly" class="pill-button">${esc(footer?.ctaText || "Prenons le temps d'un échange →")}</a>
+        <a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer" class="pill-button">${esc(footer?.ctaText || "Prenons le temps d'un échange →")}</a>
       </div>
       <div class="footer-bottom">
-        <a href="mailto:${esc(settings?.email)}">${esc(settings?.email)}</a>
+        <a href="mailto:ndebeir@yahoo.fr">ndebeir@yahoo.fr</a>
         <span class="footer-dot">·</span>
         <a href="${esc(settings?.linkedin)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <span class="footer-dot">·</span>
@@ -144,7 +150,7 @@ function footerMinimal(settings) {
   return `<footer class="footer">
     <div class="footer-inner">
       <div class="footer-bottom">
-        <a href="mailto:${esc(settings?.email)}">${esc(settings?.email)}</a>
+        <a href="mailto:ndebeir@yahoo.fr">ndebeir@yahoo.fr</a>
         <span class="footer-dot">·</span>
         <a href="${esc(settings?.linkedin)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <span class="footer-dot">·</span>
@@ -188,24 +194,38 @@ ${body}
 // ── Page builders ──
 
 function buildIndex(data) {
-  const { settings, hero, mirror, coachingsSection, coachings, whois, testimonialsSection, testimonials, contact, footer, partnerLogos, galleryPhotos } = data;
+  const { settings, hero, mirror, processSection, coachingsSection, coachings, whois, testimonialsSection, testimonials, contact, footer, partnerLogos, galleryPhotos, blogArticles } = data;
 
   const mirrorCards = (mirror?.cards || [])
-    .map((c) => `<div class="mirror-card"><p class="mirror-card-text">${esc(c.text)}</p></div>`)
+    .map((c) => `<div class="mirror-card"><p class="mirror-card-text">${nl2br(c.text)}</p></div>`)
     .join("\n        ");
 
   const coachingCards = (coachings || [])
     .map((c) => `<div class="coaching-card">
           <h3 class="coaching-card-title">${esc(c.title)}</h3>
-          <p class="coaching-card-text">${esc(c.description)}</p>
+          <p class="coaching-card-text">${nl2br(c.description)}</p>
         </div>`)
     .join("\n\n        ");
 
+  const TESTIMONIAL_THRESHOLD = 400;
   const testimonialCards = (testimonials || [])
-    .map((t) => `<div class="testimonial-card">
+    .map((t) => {
+      const text = t.text || "";
+      const isLong = text.length > TESTIMONIAL_THRESHOLD;
+      let preview = "";
+      if (isLong) {
+        const cut = text.lastIndexOf(".", TESTIMONIAL_THRESHOLD);
+        preview = cut > 0 ? text.slice(0, cut + 1) : text.slice(0, TESTIMONIAL_THRESHOLD);
+      }
+      return `<div class="testimonial-card${isLong ? " testimonial-expandable" : ""}">
           <p class="testimonial-theme">${esc(t.theme)}</p>
-          <p class="testimonial-text">${esc(t.text)}</p>
-        </div>`)
+          ${isLong
+            ? `<p class="testimonial-text testimonial-preview">${nl2br(preview)}</p>
+          <p class="testimonial-text testimonial-full">${nl2br(text)}</p>
+          <button class="testimonial-toggle" onclick="this.parentElement.classList.toggle('expanded')"></button>`
+            : `<p class="testimonial-text">${nl2br(text)}</p>`}
+        </div>`;
+    })
     .join("\n\n        ");
 
   const body = `
@@ -217,8 +237,20 @@ function buildIndex(data) {
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1 class="hero-title">${esc(hero?.title)}</h1>
-      <p class="hero-subtitle">${esc(hero?.subtitle)}</p>
-      <a href="#calendly" class="pill-button">${esc(hero?.ctaText)}</a>
+      <p class="hero-subtitle">${nl2br(hero?.subtitle)}</p>
+      <a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer" class="pill-button">${esc(hero?.ctaText)}</a>
+    </div>
+  </section>
+
+  <!-- LOGOS PARTENAIRES -->
+  <section class="logos-banner">
+    <div class="logos-track">
+      ${(() => {
+        const logos = (partnerLogos || []).map(l => `<img src="${sanityImg(l.logo)}" alt="${esc(l.name)}">`).join("\n        ");
+        const firstSlide = `<div class="logos-slide">\n        ${logos}\n      </div>`;
+        const dupeSlide = `<div class="logos-slide" aria-hidden="true">\n        ${logos}\n      </div>`;
+        return [firstSlide, dupeSlide, dupeSlide, dupeSlide].join("\n      ");
+      })()}
     </div>
   </section>
 
@@ -235,15 +267,43 @@ function buildIndex(data) {
     </div>
   </section>
 
+  <!-- PROCESS -->
+  <section class="process">
+    <div class="process-inner">
+      <p class="section-label">${esc(processSection?.label || "Mon processus")}</p>
+      <h2 class="section-title">${esc(processSection?.title || "Un accompagnement structuré, à votre rythme")}</h2>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="process-step-number">1</div>
+          <h3 class="process-step-title">${esc(processSection?.step1Title || "Premier échange")}</h3>
+          <p class="process-step-text">${nl2br(processSection?.step1Text)}</p>
+        </div>
+        <div class="process-step">
+          <div class="process-step-number">2</div>
+          <h3 class="process-step-title">${esc(processSection?.step2Title || "Cadre & engagement")}</h3>
+          <p class="process-step-text">${nl2br(processSection?.step2Text)}</p>
+        </div>
+        <div class="process-step">
+          <div class="process-step-number">3</div>
+          <h3 class="process-step-title">${esc(processSection?.step3Title || "Passage à l'action")}</h3>
+          <p class="process-step-text">${nl2br(processSection?.step3Text)}</p>
+        </div>
+      </div>
+      <p class="process-confidentiality">${nl2br(processSection?.confidentiality)}</p>
+      <div class="process-cta">
+        <a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer" class="pill-button">${esc(processSection?.ctaText || "Prendre rendez-vous")}</a>
+      </div>
+    </div>
+  </section>
+
   <!-- COACHINGS -->
   <section class="coachings">
     <div class="coachings-inner">
-      <p class="section-label">${esc(coachingsSection?.label)}</p>
       <h2 class="section-title">${esc(coachingsSection?.title)}</h2>
       <div class="coaching-grid">
         ${coachingCards}
       </div>
-      <p class="coachings-format">${esc(coachingsSection?.formatText)}</p>
+      <p class="coachings-format">${nl2br(coachingsSection?.formatText)}</p>
       <div class="section-cta">
         <a href="prestations.html" class="pill-button">${esc(coachingsSection?.ctaText)}</a>
       </div>
@@ -260,8 +320,8 @@ function buildIndex(data) {
         <p class="section-label">${esc(whois?.label)}</p>
         <h2 class="whois-title">${esc(whois?.name)}</h2>
         <p class="whois-role">${esc(whois?.role)}</p>
-        <p class="whois-bio">${esc(whois?.bio1)}</p>
-        <p class="whois-bio">${esc(whois?.bio2)}</p>
+        <p class="whois-bio">${nl2br(whois?.bio1)}</p>
+        <p class="whois-bio">${nl2br(whois?.bio2)}</p>
         <a href="about.html" class="pill-button">${esc(whois?.ctaText)}</a>
       </div>
     </div>
@@ -276,44 +336,74 @@ function buildIndex(data) {
         ${testimonialCards}
       </div>
       <div class="section-cta">
-        <a href="#calendly" class="pill-button">${esc(testimonialsSection?.ctaText)}</a>
+        <a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer" class="pill-button">${esc(testimonialsSection?.ctaText)}</a>
       </div>
     </div>
   </section>
 
-  <!-- LOGOS PARTENAIRES -->
-  <section class="logos-banner">
-    <div class="logos-track">
-      ${(() => {
-        const logos = (partnerLogos || []).map(l => `<img src="${sanityImg(l.logo)}" alt="${esc(l.name)}">`).join("\n        ");
-        const firstSlide = `<div class="logos-slide">\n        ${logos}\n      </div>`;
-        const dupeSlide = `<div class="logos-slide" aria-hidden="true">\n        ${logos}\n      </div>`;
-        return [firstSlide, dupeSlide, dupeSlide, dupeSlide].join("\n      ");
-      })()}
+
+
+  <!-- LEAD MAGNET -->
+  <section class="leadmagnet">
+    <div class="leadmagnet-inner">
+      <div class="leadmagnet-content">
+        <p class="leadmagnet-label">Ressource gratuite</p>
+        <h2 class="leadmagnet-title">Les 90 premiers jours :<br>votre checklist prise de poste</h2>
+        <ul class="leadmagnet-bullets">
+          <li>Les 5 conversations clés à avoir dans les 2 premières semaines</li>
+          <li>Le cadre pour poser votre leadership sans brusquer</li>
+          <li>Les erreurs que 80% des dirigeants font — et comment les éviter</li>
+          <li>Un template de plan d'action 30-60-90 jours prêt à l'emploi</li>
+        </ul>
+        <p class="leadmagnet-social-proof">Utilisée par plus de 200 cadres dirigeants accompagnés en coaching.</p>
+      </div>
+      <div class="leadmagnet-card">
+        <h3 class="leadmagnet-card-title">Recevez la checklist</h3>
+        <p class="leadmagnet-card-sub">Directement dans votre boîte mail</p>
+        <form class="leadmagnet-form">
+          <input type="text" name="firstname" placeholder="Votre prénom" autocomplete="given-name">
+          <input type="email" name="email" placeholder="Votre adresse email" required autocomplete="email">
+          <button type="submit" class="leadmagnet-submit">Recevoir ma checklist →</button>
+        </form>
+        <p class="leadmagnet-disclaimer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Pas de spam. Désinscription en un clic.
+        </p>
+      </div>
     </div>
   </section>
 
-  <!-- GALERIE -->
-  <section class="gallery">
-    <div class="gallery-inner">
-      <div class="gallery-grid">
-        ${(galleryPhotos || []).map(g =>
-            `<div class="gallery-item"><img src="${sanityImg(g.image)}" alt="${esc(g.alt)}" loading="lazy"></div>`
-          ).join("\n        ")}
-      </div>
-      <div class="section-cta">
-        <a href="#contact" class="pill-button">${esc(settings?.galleryCtaText || "Réserver ma session découverte →")}</a>
+  <!-- BLOG -->
+  ${(blogArticles && blogArticles.length > 0) ? `<section class="blog">
+    <div class="blog-inner">
+      <p class="section-label">Blog</p>
+      <h2 class="section-title">Articles & réflexions</h2>
+      <div class="blog-grid">
+        ${blogArticles.map(a => {
+          const url = a.linkedinUrl || "#";
+          return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="blog-card">
+            <div class="blog-card-header">
+              <img src="${sanityImg(settings?.logo || whois?.photo, "images/portrait-nathalie.webp")}" alt="" class="blog-card-avatar">
+              <div>
+                <p class="blog-card-author">${esc(settings?.siteName || "Nathalie Debeir")}</p>
+                <p class="blog-card-date">${a.date ? new Date(a.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : ""}</p>
+              </div>
+            </div>
+            <p class="blog-card-excerpt">${esc(a.excerpt)} <span class="blog-card-more">… lire plus sur LinkedIn</span></p>
+            ${a.image ? `<img src="${sanityImg(a.image)}" alt="${esc(a.title)}" class="blog-card-image">` : ""}
+          </a>`;
+        }).join("\n        ")}
       </div>
     </div>
-  </section>
+  </section>` : ""}
 
   <!-- CONTACT -->
   <section class="contact" id="contact">
     <div class="contact-inner">
       <p class="section-label">${esc(contact?.label)}</p>
       <h2 class="section-title">${esc(contact?.title)}</h2>
-      <p class="contact-intro">${esc(contact?.intro)}</p>
-      <form class="contact-form" action="https://formspree.io/f/${esc(settings?.formspreeId)}" method="POST">
+      <p class="contact-intro">${nl2br(contact?.intro)}</p>
+      <form class="contact-form" name="contact" method="POST" data-netlify="true">
         <div class="contact-row">
           <input type="text" name="prenom" placeholder="${esc(contact?.placeholderPrenom || "Prénom")}" required>
           <input type="text" name="nom" placeholder="${esc(contact?.placeholderNom || "Nom")}" required>
@@ -348,8 +438,12 @@ function buildPrestations(data) {
       <div class="presta-text">
         <p class="presta-label">${num}</p>
         <h2 class="presta-title">${esc(p.title)}</h2>
-        <p class="presta-desc">${esc(p.description)}</p>
-        ${p.detail ? `<p class="presta-detail">${esc(p.detail)}</p>` : ""}
+        <p class="presta-desc">${nl2br(p.description)}</p>
+        ${p.detail ? `<p class="presta-detail">${nl2br(p.detail)}</p>` : ""}
+        ${p.extra ? `<div class="presta-extra-wrap">
+          <p class="presta-extra">${nl2br(p.extra)}</p>
+        </div>
+        <button class="presta-extra-toggle" onclick="this.previousElementSibling.classList.toggle('expanded');this.classList.toggle('expanded')"></button>` : ""}
       </div>
       <div class="presta-image">
         <img src="${sanityImg(p.image)}" alt="${esc(p.imageAlt)}" loading="lazy">
@@ -375,7 +469,7 @@ function buildPrestations(data) {
   <!-- CTA -->
   <section class="presta-cta">
     <p class="presta-cta-text">${esc(prestationsPage?.ctaIntro)}</p>
-    <a href="index.html#calendly" class="pill-button">${esc(prestationsPage?.ctaText)}</a>
+    <a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer" class="pill-button">${esc(prestationsPage?.ctaText)}</a>
   </section>
 
   ${footerMinimal(settings)}
@@ -425,8 +519,8 @@ function buildAbout(data) {
         <p class="section-label">${esc(aboutTop?.label)}</p>
         <h1 class="about-top-name">${esc(aboutTop?.name)}</h1>
         <p class="about-top-role">${esc(aboutTop?.role)}</p>
-        <p class="about-top-bio">${esc(aboutTop?.intro1)}</p>
-        <p class="about-top-bio">${esc(aboutTop?.intro2)}</p>
+        <p class="about-top-bio">${nl2br(aboutTop?.intro1)}</p>
+        <p class="about-top-bio">${nl2br(aboutTop?.intro2)}</p>
       </div>
     </div>
   </section>
@@ -435,28 +529,23 @@ function buildAbout(data) {
   <div class="about-content">
     <h2 class="about-hero-title">${esc(aboutBio?.heading)}</h2>
     <div class="about-text">
-      <p>${esc(aboutBio?.paragraph1)}</p>
-      <p>${esc(aboutBio?.paragraph2)}</p>
-      <p>${esc(aboutBio?.paragraph3)}</p>
-      <p>${esc(aboutBio?.paragraph4)}</p>
+      <p>${nl2br(aboutBio?.bio || [aboutBio?.paragraph1, aboutBio?.paragraph2, aboutBio?.paragraph3, aboutBio?.paragraph4].filter(Boolean).join("\n\n"))}</p>
     </div>
   </div>
 
   <!-- PULLQUOTE -->
   <div class="about-pullquote">
-    ${esc(pullquote?.text)}
+    ${nl2br(pullquote?.text)}
   </div>
 
   <!-- PHOTO 2 -->
-  <div class="about-photo-block" style="max-width: 800px;">
-    <img src="${sanityImg(aboutBio?.photo, "images/silhouettes-coucher.webp")}" alt="${esc(aboutBio?.photoAlt || "Échange au coucher de soleil")}" class="about-photo about-photo-landscape">
+  <div class="about-photo-block" style="max-width: 600px;">
+    <img src="${sanityImg(aboutBio?.photo)}" alt="${esc(aboutBio?.photoAlt || "")}" class="about-photo">
   </div>
 
   <!-- COACHINGS RESUME -->
-  <div class="about-content">
-    <div class="about-text">
-      <p class="about-section-title">${esc(aboutBio?.coachingSectionTitle || "Des coachings pour toutes les situations")}</p>
-    </div>
+  <div class="about-content" style="text-align: center;">
+    <h2 class="section-title">${esc(aboutBio?.coachingSectionTitle || "Des coachings pour toutes les situations")}</h2>
     <div class="about-coaching-list">
       ${coachingItems}
     </div>
@@ -468,7 +557,6 @@ function buildAbout(data) {
   <!-- PRESSE -->
   <section class="press">
     <div class="press-inner">
-      <p class="section-label">${esc(aboutBio?.pressLabel || "Presse")}</p>
       <h2 class="section-title">${esc(aboutBio?.pressTitle || "Presse")}</h2>
       <div class="press-grid">
         ${pressCards}
@@ -497,22 +585,22 @@ function buildMentions(data) {
       <h1 class="legal-title">Mentions légales</h1>
 
       <h2>Éditeur du site</h2>
-      <p>${nl2br(esc(mentions?.editeur))}</p>
+      <p>${nl2br(mentions?.editeur)}</p>
 
       <h2>Hébergement</h2>
-      <p>${nl2br(esc(mentions?.hebergement))}</p>
+      <p>${nl2br(mentions?.hebergement)}</p>
 
       <h2>Propriété intellectuelle</h2>
-      <p>${esc(mentions?.proprieteIntellectuelle)}</p>
+      <p>${nl2br(mentions?.proprieteIntellectuelle)}</p>
 
       <h2>Protection des données personnelles</h2>
-      <p>${esc(mentions?.rgpd)}</p>
+      <p>${nl2br(mentions?.rgpd)}</p>
 
       <h2>Cookies</h2>
-      <p>${esc(mentions?.cookies)}</p>
+      <p>${nl2br(mentions?.cookies)}</p>
 
       <h2>Crédits</h2>
-      <p>${esc(mentions?.credits)}</p>
+      <p>${nl2br(mentions?.credits)}</p>
     </div>
   </div>
 
@@ -570,7 +658,7 @@ async function build() {
     cpSync(join(SRC, "netlify.toml"), join(DIST, "netlify.toml"));
   } catch {}
 
-  console.log("Build complete! Output in version-a/dist/");
+  console.log("Build complete! Output in dist/");
 }
 
 build().catch((err) => {
