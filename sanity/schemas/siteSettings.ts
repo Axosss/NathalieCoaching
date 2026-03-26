@@ -16,6 +16,7 @@ export const siteSettings = defineType({
     defineField({ name: "cookieAccept", title: "Bouton accepter cookies", type: "string" }),
     defineField({ name: "cookieRefuse", title: "Bouton refuser cookies", type: "string" }),
     defineField({ name: "metaDescriptionHome", title: "Meta description accueil", type: "text", rows: 2 }),
+    defineField({ name: "contactEmail", title: "Email de contact", type: "string" }),
     defineField({ name: "galleryCtaText", title: "CTA galerie", type: "string" }),
   ],
 });

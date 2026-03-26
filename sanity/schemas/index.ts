@@ -20,6 +20,8 @@ import { pressArticle } from "./pressArticle";
 import { mentionsLegales } from "./mentionsLegales";
 import { processSection } from "./processSection";
 import { blogArticle } from "./blogArticle";
+import { leadMagnet } from "./leadMagnet";
+import { blogSection } from "./blogSection";
 
 export const schemaTypes = [
   siteSettings,
@@ -44,4 +46,6 @@ export const schemaTypes = [
   pressArticle,
   mentionsLegales,
   blogArticle,
+  leadMagnet,
+  blogSection,
 ];

@@ -103,7 +103,23 @@ export const deskStructure = (S: StructureBuilder) =>
                     .defaultOrdering([{ field: "order", direction: "asc" }])
                 ),
               S.listItem()
-                .title("8. Blog / Articles")
+                .title("8. Lead Magnet")
+                .schemaType("leadMagnet")
+                .child(
+                  S.document()
+                    .schemaType("leadMagnet")
+                    .documentId("leadMagnet")
+                ),
+              S.listItem()
+                .title("9. Blog (textes section)")
+                .schemaType("blogSection")
+                .child(
+                  S.document()
+                    .schemaType("blogSection")
+                    .documentId("blogSection")
+                ),
+              S.listItem()
+                .title("9. Blog / Articles")
                 .schemaType("blogArticle")
                 .child(
                   S.documentTypeList("blogArticle")

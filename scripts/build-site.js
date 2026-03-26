@@ -39,6 +39,8 @@ async function fetchAll() {
     partnerLogos,
     galleryPhotos,
     blogArticles,
+    leadMagnet,
+    blogSection,
   ] = await Promise.all([
     query('*[_type=="siteSettings"][0]'),       // settings
     query('*[_type=="homeHero"][0]'),            // hero
@@ -62,6 +64,8 @@ async function fetchAll() {
     query('*[_type=="partnerLogo"] | order(order asc)'),
     query('*[_type=="galleryPhoto"] | order(order asc)'),
     query('*[_type=="blogArticle"] | order(order asc)'),
+    query('*[_type=="leadMagnet"][0]'),
+    query('*[_type=="blogSection"][0]'),
   ]);
 
   return {
@@ -87,6 +91,8 @@ async function fetchAll() {
     partnerLogos,
     galleryPhotos,
     blogArticles,
+    leadMagnet,
+    blogSection,
   };
 }
 
@@ -113,7 +119,7 @@ function nav(settings, activePage = "") {
       </button>
       <ul class="nav-links">
         <li><a href="prestations.html">${esc(settings?.navPrestations || "Prestations")}</a></li>
-        <li><a href="about.html">${esc(settings?.navAbout || "À propos")}</a></li>
+        <li><a href="about.html">${esc(settings?.navAbout || "Qui suis-je")}</a></li>
         <li><a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer">${esc(settings?.navCta || "Prendre rendez-vous")}</a></li>
         ${settings?.linkedin ? `<li><a href="${esc(settings.linkedin)}" target="_blank" rel="noopener noreferrer" class="nav-linkedin" aria-label="LinkedIn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a></li>` : ''}
     </div>
@@ -134,7 +140,7 @@ function footerFull(settings, footer) {
         <a href="${esc(settings?.calendlyUrl || "#")}" target="_blank" rel="noopener noreferrer" class="pill-button">${esc(footer?.ctaText || "Prenons le temps d'un échange →")}</a>
       </div>
       <div class="footer-bottom">
-        <a href="mailto:ndebeir@yahoo.fr">ndebeir@yahoo.fr</a>
+        <a href="mailto:${esc(settings?.contactEmail || "ndebeir@yahoo.fr")}">${esc(settings?.contactEmail || "ndebeir@yahoo.fr")}</a>
         <span class="footer-dot">·</span>
         <a href="${esc(settings?.linkedin)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <span class="footer-dot">·</span>
@@ -150,7 +156,7 @@ function footerMinimal(settings) {
   return `<footer class="footer">
     <div class="footer-inner">
       <div class="footer-bottom">
-        <a href="mailto:ndebeir@yahoo.fr">ndebeir@yahoo.fr</a>
+        <a href="mailto:${esc(settings?.contactEmail || "ndebeir@yahoo.fr")}">${esc(settings?.contactEmail || "ndebeir@yahoo.fr")}</a>
         <span class="footer-dot">·</span>
         <a href="${esc(settings?.linkedin)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <span class="footer-dot">·</span>
@@ -194,7 +200,7 @@ ${body}
 // ── Page builders ──
 
 function buildIndex(data) {
-  const { settings, hero, mirror, processSection, coachingsSection, coachings, whois, testimonialsSection, testimonials, contact, footer, partnerLogos, galleryPhotos, blogArticles } = data;
+  const { settings, hero, mirror, processSection, coachingsSection, coachings, whois, testimonialsSection, testimonials, contact, footer, partnerLogos, galleryPhotos, blogArticles, leadMagnet, blogSection } = data;
 
   const mirrorCards = (mirror?.cards || [])
     .map((c) => `<div class="mirror-card"><p class="mirror-card-text">${nl2br(c.text)}</p></div>`)
@@ -267,6 +273,22 @@ function buildIndex(data) {
     </div>
   </section>
 
+  <!-- QUI SUIS-JE -->
+  <section class="whois">
+    <div class="whois-inner">
+      <div class="whois-photo">
+        <img src="${sanityImg(whois?.photo, "images/portrait-nathalie.webp")}" alt="${esc(whois?.name)}" loading="lazy">
+      </div>
+      <div class="whois-text">
+        <p class="section-label">${esc(whois?.label)}</p>
+        <h2 class="whois-title">${esc(whois?.name)}</h2>
+        <p class="whois-role">${esc(whois?.role)}</p>
+        <p class="whois-bio">${nl2br(whois?.bio1)}</p>
+        <p class="whois-bio">${nl2br(whois?.bio2)}</p>
+      </div>
+    </div>
+  </section>
+
   <!-- PROCESS -->
   <section class="process">
     <div class="process-inner">
@@ -310,23 +332,6 @@ function buildIndex(data) {
     </div>
   </section>
 
-  <!-- QUI SUIS-JE -->
-  <section class="whois">
-    <div class="whois-inner">
-      <div class="whois-photo">
-        <img src="${sanityImg(whois?.photo, "images/portrait-nathalie.webp")}" alt="${esc(whois?.name)}" loading="lazy">
-      </div>
-      <div class="whois-text">
-        <p class="section-label">${esc(whois?.label)}</p>
-        <h2 class="whois-title">${esc(whois?.name)}</h2>
-        <p class="whois-role">${esc(whois?.role)}</p>
-        <p class="whois-bio">${nl2br(whois?.bio1)}</p>
-        <p class="whois-bio">${nl2br(whois?.bio2)}</p>
-        <a href="about.html" class="pill-button">${esc(whois?.ctaText)}</a>
-      </div>
-    </div>
-  </section>
-
   <!-- TEMOIGNAGES -->
   <section class="testimonials">
     <div class="testimonials-inner">
@@ -347,27 +352,29 @@ function buildIndex(data) {
   <section class="leadmagnet">
     <div class="leadmagnet-inner">
       <div class="leadmagnet-content">
-        <p class="leadmagnet-label">Ressource gratuite</p>
-        <h2 class="leadmagnet-title">Les 90 premiers jours :<br>votre checklist prise de poste</h2>
+        <p class="leadmagnet-label">${esc(leadMagnet?.label || "Ressource gratuite")}</p>
+        <h2 class="leadmagnet-title">${esc(leadMagnet?.title || "Les 90 premiers jours : votre checklist prise de poste")}</h2>
         <ul class="leadmagnet-bullets">
-          <li>Les 5 conversations clés à avoir dans les 2 premières semaines</li>
-          <li>Le cadre pour poser votre leadership sans brusquer</li>
-          <li>Les erreurs que 80% des dirigeants font — et comment les éviter</li>
-          <li>Un template de plan d'action 30-60-90 jours prêt à l'emploi</li>
+          ${(leadMagnet?.bullets || [
+            "Les 5 conversations clés à avoir dans les 2 premières semaines",
+            "Le cadre pour poser votre leadership sans brusquer",
+            "Les erreurs que 80% des dirigeants font — et comment les éviter",
+            "Un template de plan d'action 30-60-90 jours prêt à l'emploi",
+          ]).map(b => `<li>${esc(b)}</li>`).join("\n          ")}
         </ul>
-        <p class="leadmagnet-social-proof">Utilisée par plus de 200 cadres dirigeants accompagnés en coaching.</p>
+        <p class="leadmagnet-social-proof">${esc(leadMagnet?.socialProof || "Utilisée par plus de 200 cadres dirigeants accompagnés en coaching.")}</p>
       </div>
       <div class="leadmagnet-card">
-        <h3 class="leadmagnet-card-title">Recevez la checklist</h3>
-        <p class="leadmagnet-card-sub">Directement dans votre boîte mail</p>
+        <h3 class="leadmagnet-card-title">${esc(leadMagnet?.formTitle || "Recevez la checklist")}</h3>
+        <p class="leadmagnet-card-sub">${esc(leadMagnet?.formSubtitle || "Directement dans votre boîte mail")}</p>
         <form class="leadmagnet-form">
-          <input type="text" name="firstname" placeholder="Votre prénom" autocomplete="given-name">
-          <input type="email" name="email" placeholder="Votre adresse email" required autocomplete="email">
-          <button type="submit" class="leadmagnet-submit">Recevoir ma checklist →</button>
+          <input type="text" name="firstname" placeholder="${esc(leadMagnet?.placeholderName || "Votre prénom")}" autocomplete="given-name">
+          <input type="email" name="email" placeholder="${esc(leadMagnet?.placeholderEmail || "Votre adresse email")}" required autocomplete="email">
+          <button type="submit" class="leadmagnet-submit">${esc(leadMagnet?.buttonText || "Recevoir ma checklist →")}</button>
         </form>
         <p class="leadmagnet-disclaimer">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          Pas de spam. Désinscription en un clic.
+          ${esc(leadMagnet?.disclaimer || "Pas de spam. Désinscription en un clic.")}
         </p>
       </div>
     </div>
@@ -376,8 +383,8 @@ function buildIndex(data) {
   <!-- BLOG -->
   ${(blogArticles && blogArticles.length > 0) ? `<section class="blog">
     <div class="blog-inner">
-      <p class="section-label">Blog</p>
-      <h2 class="section-title">Articles & réflexions</h2>
+      <p class="section-label">${esc(blogSection?.label || "Blog")}</p>
+      <h2 class="section-title">${esc(blogSection?.title || "Articles & réflexions")}</h2>
       <div class="blog-grid">
         ${blogArticles.map(a => {
           const url = a.linkedinUrl || "#";
@@ -568,7 +575,7 @@ function buildAbout(data) {
   ${cookieBanner(settings)}`;
 
   return htmlWrap(
-    `À propos — ${settings?.siteName || "Nathalie Debeir"}`,
+    `Qui suis-je — ${settings?.siteName || "Nathalie Debeir"}`,
     aboutTop?.metaDescription || "Coach professionnelle certifiee. 25 ans de carriere executive, Secretaire Generale et Directrice Juridique de groupes internationaux.",
     body
   );
