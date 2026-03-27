@@ -113,7 +113,7 @@ function sanityImg(imageField, fallback = "") {
 function nav(settings, activePage = "") {
   return `<nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo"><img src="images/logo-nav.png" alt="${esc(settings?.siteName || "Nathalie Debeir")}" class="nav-logo-img"></a>
+      <a href="index.html" class="nav-logo"><img src="${sanityImg(settings?.logo, "images/logo-nav.png")}" alt="${esc(settings?.siteName || "Nathalie Debeir")}" class="nav-logo-img"></a>
       <button class="nav-hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>

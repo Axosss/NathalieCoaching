@@ -35,7 +35,7 @@
 - [x] Sous-titres plus grands ("Quelques sessions...", "Sessions en visio...")
 - [x] 4ème paragraphe par prestation + expand au clic si trop long
 
-## Page À propos
+## Page Qui suis-je (ex À propos)
 - [x] Titres plus grands ("À propos", "Un programme sur mesure...")
 - [x] Textes coaching colonne droite — plus grands, même couleur que texte /prestation
 - [x] Photo sous citation éditable dans Sanity + remplacer par photo galerie
@@ -47,5 +47,15 @@
 ## Footer
 - [x] Remettre le mail ndebeir@yahoo.fr en footer
 
+## Retours Nathalie (26/03)
+- [x] Renommer nav "À propos" → "Qui suis-je"
+- [x] Remonter section "Qui suis-je" avant le processus d'accompagnement
+- [x] Supprimer bouton "En savoir plus Nathalie Debeir" sur la home
+- [x] Animation progressive des process steps (fill 1→2→3)
+- [x] CTA "Prendre rendez-vous" sous la section processus
+- [x] Lead magnet checklist prise de poste (section avant blog)
+- [x] Nettoyage projet : suppression version-a/, tout à la racine
+
 ## À faire
 - [ ] Régler le Calendly + infos dans le formulaire Calendly
+- [ ] Brancher le lead magnet sur un outil mailing (Brevo ?)

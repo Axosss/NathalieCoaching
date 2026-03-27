@@ -6,6 +6,7 @@ export const siteSettings = defineType({
   type: "document",
   fields: [
     defineField({ name: "siteName", title: "Nom du site", type: "string" }),
+    defineField({ name: "logo", title: "Logo navbar", type: "image" }),
     defineField({ name: "linkedin", title: "URL LinkedIn", type: "url" }),
     defineField({ name: "calendlyUrl", title: "URL Calendly", type: "url" }),
     defineField({ name: "companyName", title: "Raison sociale", type: "string" }),
